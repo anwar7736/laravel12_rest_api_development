@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->enum('type', [1,2])->comment('1=>days, 2=>months');
             $table->integer('count');
-            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('created_by')->nullable()->constrained('users')->cascadeOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->cascadeOnDelete();
             $table->foreignId('deleted_by')->nullable()->constrained('users')->cascadeOnDelete();
             $table->timestamps();

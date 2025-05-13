@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Facade;
 
 class ProductRepository implements ProductRepositoryInterface
 {
-    public function get(Request $request)
+    public static function get(Request $request)
     {
         $search = $request->search;
         $limit  = $request->limit ?? 50;
@@ -19,23 +19,45 @@ class ProductRepository implements ProductRepositoryInterface
         })->paginate($limit);
     }
 
-    public function find(int $id)
+    public static function find(int $id)
     {
         return Product::findOrFail($id);
     }
 
-    public function store(array $data)
+    public static function store(Request $request)
     {
+        $data = $request->only(['name', 'unit_id', 'warranty_id', 'dp_price', 'mrp_price', 'remarks']);
         $product = Product::create($data);
+        if($request->brands)
+        {
+            $product->brands()->attach($request->brands);
+        }
+
+        if($request->categories)
+        {
+            $product->categories()->attach($request->categories);
+        }
+
+        $images_array = [];
+
+        if($request->hasFile('images'))
+        {
+            foreach ($request->images as $key => $image) 
+            {
+                $imageName = uploadFile($image);
+                $images_array[] = ['image' => $imageName];
+            }
+        }
+        $product->images()->createMany($images_array);
         return $product;
     }
 
-    public function update(array $data, int $id)
+    public static function update(array $data, int $id)
     {
         return Product::find($id)->update($data);
     }
 
-    public function destroy(int $id)
+    public static function destroy(int $id)
     {
         return Product::find($id)->destroy();
     }

@@ -15,7 +15,6 @@ class UnitSeeder extends Seeder
     {
         Unit::factory()->create([
             'name' => 'Pcs',
-            'created_by' => 1,
         ]);
     }
 }

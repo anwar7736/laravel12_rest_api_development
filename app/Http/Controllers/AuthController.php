@@ -6,6 +6,8 @@ use App\Http\Requests\UserLoginRequest;
 use App\Http\Requests\UserRegistrationRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -13,32 +15,24 @@ class AuthController extends Controller
     public function register(UserRegistrationRequest $request)
     {
         try {
-            $data = $request->validated();
+            DB::beginTransaction();
+            $data = $request->only(['name', 'phone', 'email', 'password', 'address']);
             $user = User::create($data);
+            $user->created_by = $user->id;
+            $user->save();
             if ($request->hasFile('image')) {
-
-                $file = $request->file('image');
-
-                $newName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $file->storeAs('images', $newName, 'public');
-                $user->image()->create(['image' => $newName]);
-                
+                $newName = uploadFile($request->image);
+                $user->image()->create(['image' => $newName, 'created_by' => $user->id]);
             }
-            
 
-            $user->access_token = $user->createToken('user_auth_token')->plainTextToken;
-            return response([
-                'success' => true,
-                'message' => "Registration successfully",
-                'data' => $user->with('image')
-                    ->select('id', 'name', 'phone', 'email', 'address')
-                    ->first(),
-            ]);
+            $data = $user->select('id', 'name', 'phone', 'email', 'address')->first();
+            $data->access_token = $user->createToken('user_auth_token')->plainTextToken;
+            Auth::login($user);
+            DB::commit();
+            return apiResponse(true, "Registration successfully", $data);
         } catch (\Throwable $th) {
-            return response([
-                'success' => false,
-                'message' => $th->getMessage(),
-            ]);
+            DB::rollBack();
+            return apiResponse(false, $th->getMessage());
         }
     }
 
@@ -49,31 +43,20 @@ class AuthController extends Controller
                 ->orWhere('email', $request->email)
                 ->first();
             if ($user && Hash::check($request->password, $user->password)) {
-                $user->access_token = $user->createToken('user_auth_token')->plainTextToken;
-                return response([
-                    'success' => true,
-                    'message' => "Login successfully",
-                    'data' => $user,
-                ]);
+                $data = $user->select('id', 'name', 'phone', 'email', 'address')->first();
+                $data->access_token = $user->createToken('user_auth_token')->plainTextToken;
+                Auth::login($user);
+                return apiResponse(true, "Login successfully", $data);
             }
-            return response([
-                'success' => false,
-                'message' => "Inavalid credentials"
-            ]);
+             return apiResponse(false, "Inavalid credentials");
         } catch (\Throwable $th) {
-            return response([
-                'success' => false,
-                'message' => $th->getMessage(),
-            ]);
+ return apiResponse(false, $th->getMessage());
         }
     }
 
     public function logout()
     {
         request()->user()->currentAccessToken()->delete();
-        return response([
-            'success' => true,
-            'message' => "Logout successfully"
-        ]);
+        return apiResponse(true, "Logout successfully");
     }
 }

@@ -17,7 +17,6 @@ class WarrantySeeder extends Seeder
             'name' => '7 Days Warranty',
             'type' => 1,
             'count' => 7,
-            'created_by' => 1,
         ]);
     }
 }

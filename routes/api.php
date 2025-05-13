@@ -16,4 +16,7 @@ Route::prefix('v1')->group(function(){
     });
     Route::post('user-registration', [AuthController::class, 'register']);
     Route::post('user-login', [AuthController::class, 'login']);
+    Route::get('login', function(){
+        abort(403, 'Unauthorized action.');
+    })->name('login');
 });

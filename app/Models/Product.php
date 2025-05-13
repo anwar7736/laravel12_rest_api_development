@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\ModelActionCauser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, ModelActionCauser;
+    protected $guarded = ['id'];
 
     public function unit()
     {
@@ -50,4 +52,8 @@ class Product extends Model
         return $this->belongsTo(User::class, 'deleted_by', 'id');
     }
 
+    public function setSkuAttribute($value)
+    {
+        $this->attributes['sku'] = "SKU-".rand(11111,99999);
+    }
 }

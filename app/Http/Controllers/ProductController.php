@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Facades\ProductServe;
 use App\Http\Requests\ProductRequest;
+use App\Http\Requests\ProductStoreRequest;
+use App\Http\Requests\ProductUpdateRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
+use App\Utils\ProductUtil;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -16,7 +19,7 @@ class ProductController extends Controller
         try {
             $success = false;
             $data = [];
-            $products = ProductServe::get($request);
+            $products = ProductUtil::get($request);
             if($products){
                 $success = true;
                 $data = ProductResource::collection($products);
@@ -28,11 +31,12 @@ class ProductController extends Controller
         }
     }
 
-    public function store(ProductRequest $request)
+    public function store(ProductStoreRequest $request)
     {
+        // return $request->all();
         try {
             DB::beginTransaction();
-            $product = ProductServe::store($request->validated());
+            $product = ProductUtil::store($request);
             DB::commit();
             return apiResponse(true, 'Product created successfully', new ProductResource($product));
         } catch (\Throwable $th) {
@@ -46,7 +50,7 @@ class ProductController extends Controller
         try {
             $success = false;
             $data = [];
-            $product = ProductServe::find($id);
+            $product = ProductUtil::find($id);
             if($product){
                 $success = true;
                 $data = new ProductResource($product);
@@ -58,11 +62,11 @@ class ProductController extends Controller
     }
 
 
-    public function update(ProductRequest $request, int $id)
+    public function update(ProductUpdateRequest $request, int $id)
     {
         try {
             DB::beginTransaction();
-            $product = ProductServe::update($request->validated(), $id);
+            $product = ProductUtil::update($request->validated(), $id);
             DB::commit();
             return apiResponse(true, 'Product updated successfully', new ProductResource($product));
         } catch (\Throwable $th) {
@@ -75,7 +79,7 @@ class ProductController extends Controller
     {
         try {
             DB::beginTransaction();
-            ProductServe::destroy($id);
+            ProductUtil::destroy($id);
             DB::commit();
             return apiResponse(true, 'Product deleted successfully');
         } catch (\Throwable $th) {

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Brand extends Model
 {
     use HasFactory, SoftDeletes;
+        protected $guarded = ['id'];
 
     public function products()
     {
