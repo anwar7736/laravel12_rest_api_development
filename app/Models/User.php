@@ -18,11 +18,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    protected $guarded = ['id'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -47,6 +43,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function image()
+    {
+        return $this->morphOne(Image::class, 'imageable');
+    }
+
     public function creator()
     {
         return $this->belongsTo(self::class, 'created_by', 'id');
@@ -60,5 +61,10 @@ class User extends Authenticatable
     public function deletor()
     {
         return $this->belongsTo(self::class, 'deleted_by', 'id');
+    }
+
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['password'] = bcrypt($value);
     }
 }
