@@ -14,18 +14,25 @@ class AuthController extends Controller
     {
         try {
             $data = $request->validated();
-            // if($request->hasFile('image'))
-            // {
-            //     $image = NULL;
-            //     $data['image'] = $image;
-            // }
-
             $user = User::create($data);
+            if ($request->hasFile('image')) {
+
+                $file = $request->file('image');
+
+                $newName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('images', $newName, 'public');
+                $user->image()->create(['image' => $newName]);
+                
+            }
+            
+
             $user->access_token = $user->createToken('user_auth_token')->plainTextToken;
             return response([
                 'success' => true,
                 'message' => "Registration successfully",
-                'data' => $user,
+                'data' => $user->with('image')
+                    ->select('id', 'name', 'phone', 'email', 'address')
+                    ->first(),
             ]);
         } catch (\Throwable $th) {
             return response([

@@ -10,7 +10,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::prefix('v1')->group(function(){
-    Route::middleware(['auth:sanctum'])->group(function(){
+    Route::middleware('auth:sanctum')->group(function(){
         Route::apiResource('products', ProductController::class);
         Route::post('user-logout', [AuthController::class, 'logout']);
     });
