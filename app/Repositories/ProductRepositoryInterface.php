@@ -9,6 +9,6 @@ interface ProductRepositoryInterface
     public static function get(Request $request);
     public static function find(int $id);
     public static function store(Request $request);
-    public static function update(array $data, int $id);
+    public static function update(Request $request, int $id);
     public static function destroy(int $id);
 }

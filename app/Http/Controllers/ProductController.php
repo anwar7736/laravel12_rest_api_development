@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ProductCacheReset;
+use App\Events\ProductCreated;
+use App\Events\ProductDeleted;
+use App\Events\ProductStored;
+use App\Events\ProductUpdated;
 use App\Facades\ProductServe;
 use App\Http\Requests\ProductRequest;
 use App\Http\Requests\ProductStoreRequest;
@@ -20,11 +25,11 @@ class ProductController extends Controller
             $success = false;
             $data = [];
             $products = ProductUtil::get($request);
-            if($products){
+            if ($products) {
                 $success = true;
                 $data = ProductResource::collection($products);
             }
-            
+
             return apiResponse($success, '', $data);
         } catch (\Throwable $th) {
             return apiResponse(false, $th->getMessage());
@@ -38,6 +43,9 @@ class ProductController extends Controller
             DB::beginTransaction();
             $product = ProductUtil::store($request);
             DB::commit();
+            event(new ProductCacheReset());
+            event(new ProductCreated($product));
+            broadcast(new ProductStored($product))->toOthers();
             return apiResponse(true, 'Product created successfully', new ProductResource($product));
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -51,7 +59,7 @@ class ProductController extends Controller
             $success = false;
             $data = [];
             $product = ProductUtil::find($id);
-            if($product){
+            if ($product) {
                 $success = true;
                 $data = new ProductResource($product);
             }
@@ -68,6 +76,8 @@ class ProductController extends Controller
             DB::beginTransaction();
             $product = ProductUtil::update($request->validated(), $id);
             DB::commit();
+            event(new ProductCacheReset());
+            broadcast(new ProductUpdated($product))->toOthers();
             return apiResponse(true, 'Product updated successfully', new ProductResource($product));
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -79,8 +89,10 @@ class ProductController extends Controller
     {
         try {
             DB::beginTransaction();
-            ProductUtil::destroy($id);
+            $product = ProductUtil::destroy($id);
             DB::commit();
+            event(new ProductCacheReset());
+            broadcast(new ProductDeleted($product))->toOthers();
             return apiResponse(true, 'Product deleted successfully');
         } catch (\Throwable $th) {
             DB::rollBack();

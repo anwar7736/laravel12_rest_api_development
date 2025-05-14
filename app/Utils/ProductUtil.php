@@ -14,7 +14,7 @@ class ProductUtil extends Facade
         try {
             return ProductRepository::get($request);
         } catch (\Throwable $th) {
-           return $th->getMessage();
+            return $th->getMessage();
         }
     }
 
@@ -23,7 +23,7 @@ class ProductUtil extends Facade
         try {
             return ProductRepository::find($id);
         } catch (\Throwable $th) {
-           return $th->getMessage();
+            return $th->getMessage();
         }
     }
 
@@ -32,16 +32,16 @@ class ProductUtil extends Facade
         try {
             return ProductRepository::store($request);
         } catch (\Throwable $th) {
-           return $th->getMessage();
+            return $th->getMessage();
         }
     }
 
-    public static function update(array $data, int $id)
+    public static function update(Request $request, int $id)
     {
         try {
-            return ProductRepository::update($data, $id);
+            return ProductRepository::update($request, $id);
         } catch (\Throwable $th) {
-           return $th->getMessage();
+            return $th->getMessage();
         }
     }
 
@@ -50,8 +50,7 @@ class ProductUtil extends Facade
         try {
             return ProductRepository::destroy($id);
         } catch (\Throwable $th) {
-           return $th->getMessage();
+            return $th->getMessage();
         }
     }
-
 }

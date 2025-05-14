@@ -6,11 +6,13 @@ use App\Traits\ModelActionCauser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 
 class Product extends Model
 {
     use HasFactory, SoftDeletes, ModelActionCauser;
     protected $guarded = ['id'];
+    const IMAGE_PATH = "products";
 
     public function unit()
     {
@@ -54,6 +56,16 @@ class Product extends Model
 
     public function setSkuAttribute($value)
     {
-        $this->attributes['sku'] = "SKU-".rand(11111,99999);
+        $this->attributes['sku'] = "SKU-" . rand(11111, 99999);
+    }
+
+    public static function cashed_products()
+    {
+        $products = Cache::rememberForever('products', function () {
+            return Product::with(['unit', 'warranty', 'brands', 'categories', 'images'])
+                ->select('id', 'unit_id', 'warranty_id', 'name', 'sku', 'dp_price', 'mrp_price')
+                ->get();
+        });
+        return $products;
     }
 }
